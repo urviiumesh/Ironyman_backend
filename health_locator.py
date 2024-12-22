@@ -6,7 +6,7 @@ from flask import Flask, jsonify
 IPSTACK_API_KEY = "601ec84c00329d73d8f4fd795a2e8661"  # Replace with your IPStack API key
 OVERPASS_API_URL = "http://overpass-api.de/api/interpreter"
 
-app = Flask(__name__)
+app = Flask(_name_)
 
 # Function to get the user's current location using IPStack
 def get_user_location():
@@ -78,5 +78,5 @@ def nearest_kendra():
         return jsonify({"message": "No branches found."}), 404
 
 
-if __name__ == "__main__":
+if _name_ == "_main_":
     app.run(debug=True, port=6003)
