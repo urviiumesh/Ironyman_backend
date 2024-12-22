@@ -1,6 +1,6 @@
 import pytesseract
 import re
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, jsonify
 from PIL import Image
 import os
 
@@ -33,25 +33,16 @@ def block_personal_information(text):
         text = re.sub(pattern, f"[REDACTED {key.upper()}]", text)
     return text
 
-# Route for the homepage
-@app.route("/")
-def index():
-    return """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Prescription Reader</title>
-    </head>
-    <body>
-        <h1>Prescription Reader</h1>
-        <form action="/process_image" method="POST" enctype="multipart/form-data">
-            <label for="image">Upload Prescription Image:</label><br>
-            <input type="file" name="image" id="image" accept="image/*" required><br><br>
-            <button type="submit">Process Image</button>
-        </form>
-    </body>
-    </html>
+# Function to extract only the medicine names
+def extract_medicine_names(text):
     """
+    Extracts the medicine names from the given text.
+    """
+    # Regular expression to match medicine names
+    pattern = r"^[A-Za-z\s]+(?=\s\d+\.\d+gm)"
+    matches = re.findall(pattern, text, re.MULTILINE)
+    medicine_names = [match.strip() for match in matches]
+    return medicine_names
 
 # Route to process the uploaded image
 @app.route("/process_image", methods=["POST"])
@@ -74,27 +65,18 @@ def process_image():
         # Block personal information in the extracted text
         cleaned_text = block_personal_information(extracted_text)
 
+        # Extract medicine names
+        medicine_names = extract_medicine_names(cleaned_text)
+
         # Clean up the uploaded file (optional)
         os.remove(file_path)
 
-        # Return the cleaned text as HTML
-        return f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Processed Prescription</title>
-        </head>
-        <body>
-            <h1>Processed Prescription</h1>
-            <p><strong>Extracted and Cleaned Text:</strong></p>
-            <pre>{cleaned_text}</pre>
-            <a href="/">Go Back</a>
-        </body>
-        </html>
-        """
+        # Return the medicine names as plain text
+        return jsonify({"medicine_names": medicine_names})
+
     except Exception as e:
         return f"An error occurred: {str(e)}", 500
 
 # Run the Flask app
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True,port=6001)
